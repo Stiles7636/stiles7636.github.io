@@ -1,0 +1,99 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin · Portfolio</title><meta name="robots" content="noindex">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--frozen:#bee9e8;--pacific:#62b6cb;--yale:#1b4965;--pale:#cae9ff;--fresh:#5fa8d3;--muted:#5b7486}
+*{box-sizing:border-box}body{margin:0;font-family:Poppins,sans-serif;color:var(--yale);background:#f6fbff}
+header{position:sticky;top:0;z-index:5;display:flex;gap:10px;align-items:center;padding:12px 4vw;background:#fff;box-shadow:0 2px 14px #1b496514}
+header b{font-size:18px;margin-right:auto}
+main{max-width:1000px;margin:0 auto;padding:24px 4vw 80px}
+.card{background:#fff;border-radius:18px;padding:20px;box-shadow:0 6px 22px #1b496512;margin-bottom:16px}
+button{font:inherit;font-weight:600;border:0;border-radius:999px;padding:9px 18px;cursor:pointer;background:var(--yale);color:#fff}
+button.alt{background:#fff;color:var(--yale);border:2px solid var(--fresh)}button.del{background:#fde8e8;color:#b42318}button.sm{padding:5px 12px;font-size:13px}
+input,textarea,select{width:100%;font:inherit;font-size:14px;color:var(--yale);border:2px solid #dbe9f2;border-radius:10px;padding:8px 10px;background:#fbfdff}
+textarea{min-height:64px;resize:vertical}label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin:10px 0 4px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}.tabs button{background:#fff;color:var(--muted);border:2px solid #dbe9f2}.tabs button.on{background:var(--yale);color:#fff;border-color:var(--yale)}
+details{border:2px solid #e6f0f6;border-radius:14px;padding:10px 14px;margin:10px 0}summary{cursor:pointer;font-weight:600}
+.thumbs{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}.thumbs img{width:90px;height:60px;object-fit:cover;border-radius:8px;background:var(--pale)}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--yale);color:#fff;padding:10px 20px;border-radius:999px;display:none}
+.login{max-width:420px;margin:12vh auto;text-align:center}.hint{color:var(--muted);font-size:13px}
+@media(max-width:700px){.two{grid-template-columns:1fr}}
+</style></head><body>
+<div id="login" class="card login"><div style="font-size:46px">🔐</div><h2>Panel de administrador</h2>
+<p class="hint">Solo el dueño del portafolio puede entrar.</p><button id="in">Entrar con Google</button><p id="lerr" class="hint" style="color:#b42318"></p></div>
+<div id="app" style="display:none">
+<header><b>✏️ Admin</b><a href="./" target="_blank"><button class="alt sm">Ver sitio</button></a><button id="save">💾 Guardar cambios</button><button id="out" class="alt sm">Salir</button></header>
+<main><div class="tabs" id="tabs"></div><div id="view"></div></main></div>
+<div id="toast"></div>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="data.js"></script><script src="firebase-config.js"></script>
+<script>
+const $=s=>document.querySelector(s), esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let D=JSON.parse(JSON.stringify(window.PORTFOLIO)), tab='profile', dirty=false;
+const toast=t=>{const e=$('#toast');e.textContent=t;e.style.display='block';setTimeout(()=>e.style.display='none',2500)};
+firebase.initializeApp(window.FIREBASE_CONFIG); const auth=firebase.auth(), db=firebase.firestore(), ref=db.collection('site').doc('content');
+$('#in').onclick=()=>auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(e=>$('#lerr').textContent=e.message);
+$('#out').onclick=()=>auth.signOut();
+auth.onAuthStateChanged(async u=>{
+  if(u&&u.email!==window.ADMIN_EMAIL){$('#lerr').textContent='Esta cuenta no tiene permiso.';auth.signOut();return;}
+  $('#login').style.display=u?'none':'';$('#app').style.display=u?'':'none';
+  if(u){try{const d=await ref.get();if(d.exists&&d.data().json)D=JSON.parse(d.data().json);}catch(e){toast('No se pudo leer: '+e.message)}draw();}
+});
+window.onbeforeunload=()=>dirty?'':undefined;
+$('#save').onclick=async()=>{try{await ref.set({json:JSON.stringify(D),updated:Date.now()});dirty=false;toast('✅ Guardado. Recarga el sitio para verlo.')}catch(e){toast('Error: '+e.message)}};
+
+// helpers: bind an input to a path in D
+const get=(p)=>p.split('.').reduce((o,k)=>o?.[k],D);
+function set(p,v){const ks=p.split('.');let o=D;ks.slice(0,-1).forEach(k=>{if(o[k]==null||typeof o[k]!=='object')o[k]={};o=o[k]});o[ks.at(-1)]=v;dirty=true;}
+const field=(lbl,p,area)=>`<label>${lbl}</label>${area?`<textarea data-p="${p}">${esc(get(p))}</textarea>`:`<input data-p="${p}" value="${esc(get(p))}">`}`;
+const bi=(lbl,p,area)=>`<div class="two"><div>${field(lbl+' (EN)',p+'.en',area)}</div><div>${field(lbl+' (ES)',p+'.es',area)}</div></div>`;
+const list=(lbl,p,hint)=>`<label>${lbl} <span class="hint">${hint||'una por línea'}</span></label><textarea data-l="${p}">${esc((get(p)||[]).join('\n'))}</textarea>`;
+function bind(){document.querySelectorAll('[data-p]').forEach(e=>e.oninput=()=>set(e.dataset.p,e.value));
+ document.querySelectorAll('[data-l]').forEach(e=>e.oninput=()=>set(e.dataset.l,e.value.split('\n').map(s=>s.trim()).filter(Boolean)));}
+const slug=s=>(s||'item').toLowerCase().normalize('NFKD').replace(/[^\w]+/g,'-').replace(/^-|-$/g,'')+'-'+Date.now().toString(36).slice(-4);
+const titleOf=x=>typeof x==='object'?(x.es||x.en):x;
+
+function draw(){
+  const t=[['profile','👤 Perfil'],['about','📄 Sobre mí'],...D.sections.map((s,i)=>['s'+i,'📁 '+titleOf(s.title)])];
+  $('#tabs').innerHTML=t.map(([k,l])=>`<button class="${k===tab?'on':''}" data-t="${k}">${esc(l)}</button>`).join('')+'<button data-t="new">＋ Nueva sección</button>';
+  $('#tabs').querySelectorAll('button').forEach(b=>b.onclick=()=>{if(b.dataset.t==='new')return newSection();tab=b.dataset.t;draw()});
+  const v=$('#view');
+  if(tab==='profile') v.innerHTML=`<div class="card"><h3>Perfil</h3>${field('Nombre','profile.name')}${field('Foto (ruta, ej. img/foto.jpg)','profile.photo')}
+    ${bi('Frase','profile.tagline',1)}${field('Ubicación','profile.location')}${field('Correo','profile.email')}${field('LinkedIn','profile.linkedin')}${field('GitHub','profile.github')}</div>
+    <div class="card"><h3>Datos destacados (Inicio)</h3>${D.stats.map((s,i)=>`<details><summary>${esc(s.value)}</summary>${field('Número / valor','stats.'+i+'.value')}${bi('Texto','stats.'+i)}
+    <button class="del sm" onclick="D.stats.splice(${i},1);dirty=true;draw()">Borrar</button></details>`).join('')}
+    <button class="alt sm" onclick="D.stats.push({value:'',en:'',es:''});dirty=true;draw()">＋ Agregar dato</button></div>`;
+  else if(tab==='about') v.innerHTML=`<div class="card"><h3>Sobre mí</h3>${bi('Texto','about',1)}${list('Habilidades técnicas','skills.technical')}
+    <div class="two"><div>${list('Habilidades blandas (EN)','skills.soft.en')}</div><div>${list('Habilidades blandas (ES)','skills.soft.es')}</div></div>${bi('Idiomas','languages')}</div>
+    <div class="card"><h3>Experiencia</h3>${D.experience.map((e,i)=>`<details><summary>${esc(e.org)}</summary>${field('Empresa','experience.'+i+'.org')}${bi('Puesto','experience.'+i+'.role')}${bi('Fecha','experience.'+i+'.date')}
+    <div class="two"><div>${list('Logros (EN)','experience.'+i+'.points.en')}</div><div>${list('Logros (ES)','experience.'+i+'.points.es')}</div></div>
+    <button class="del sm" onclick="if(confirm('¿Borrar?')){D.experience.splice(${i},1);dirty=true;draw()}">Borrar</button></details>`).join('')}
+    <button class="alt sm" onclick="D.experience.unshift({org:'Nueva empresa',role:{en:'',es:''},date:{en:'',es:''},points:{en:[],es:[]}});dirty=true;draw()">＋ Agregar experiencia</button></div>
+    <div class="card"><h3>Educación y certificaciones</h3>${D.education.map((e,i)=>`<div class="row" style="align-items:flex-end"><div style="flex:1">${bi('Línea '+(i+1),'education.'+i)}</div>
+    <button class="del sm" onclick="D.education.splice(${i},1);dirty=true;draw()">✕</button></div>`).join('')}
+    <button class="alt sm" style="margin-top:10px" onclick="D.education.push({en:'',es:''});dirty=true;draw()">＋ Agregar</button></div>`;
+  else { const si=+tab.slice(1), s=D.sections[si], P='sections.'+si;
+    v.innerHTML=`<div class="card"><h3>Sección</h3>${bi('Nombre de la pestaña',P+'.title')}
+      <div class="row" style="margin-top:12px"><button class="alt sm" onclick="moveSec(${si},-1)">← Mover</button><button class="alt sm" onclick="moveSec(${si},1)">Mover →</button>
+      <button class="del sm" onclick="if(confirm('¿Borrar la sección y todos sus proyectos?')){D.sections.splice(${si},1);tab='profile';dirty=true;draw()}">Borrar sección</button></div></div>
+      ${s.items.map((p,i)=>{const Q=P+'.items.'+i;return `<div class="card"><details ${p._open?'open':''}><summary>${esc(titleOf(p.title))}${p.hidden?' · 🙈 oculto':''}</summary>
+        ${typeof p.title==='object'?bi('Título',Q+'.title'):field('Título',Q+'.title')}
+        ${list('Etiquetas / tecnologías',Q+'.tags')}${bi('Problema',Q+'.problem',1)}${bi('Solución',Q+'.solution',1)}${bi('Resultado',Q+'.result',1)}${bi('Nota (opcional, cuadro azul)',Q+'.note',1)}
+        ${list('Imágenes',Q+'.images','una ruta por línea, ej. img/design/foto.jpg')}<div class="thumbs">${(p.images||[]).map(x=>`<img src="${esc(x)}">`).join('')}</div>
+        <div class="two"><div>${list('Pies de foto (EN)',Q+'.captions.en','uno por imagen')}</div><div>${list('Pies de foto (ES)',Q+'.captions.es','uno por imagen')}</div></div>
+        <div class="two"><div>${field('Link al código (GitHub)',Q+'.links.repo')}</div><div>${field('Link demo en vivo',Q+'.links.demo')}</div></div>
+        <div class="row" style="margin-top:14px"><button class="alt sm" onclick="moveItem(${si},${i},-1)">↑</button><button class="alt sm" onclick="moveItem(${si},${i},1)">↓</button>
+        <button class="alt sm" onclick="D.sections[${si}].items[${i}].hidden=!D.sections[${si}].items[${i}].hidden;dirty=true;draw()">${p.hidden?'Mostrar':'Ocultar'}</button>
+        <button class="del sm" onclick="if(confirm('¿Borrar este proyecto?')){D.sections[${si}].items.splice(${i},1);dirty=true;draw()}">Borrar</button></div></details></div>`}).join('')}
+      <button onclick="addItem(${si})">＋ Agregar proyecto</button>`; }
+  bind();
+}
+window.newSection=()=>{const n=prompt('Nombre de la nueva sección (ES):');if(!n)return;const en=prompt('Nombre en inglés:',n)||n;
+  D.sections.push({id:slug(en),title:{en,es:n},items:[]});tab='s'+(D.sections.length-1);dirty=true;draw();};
+window.addItem=si=>{D.sections[si].items.push({id:slug('project'),title:{en:'New project',es:'Nuevo proyecto'},tags:[],problem:{en:'',es:''},solution:{en:'',es:''},result:{en:'',es:''},images:[],captions:{en:[],es:[]},links:{repo:'',demo:''},_open:true});dirty=true;draw();};
+window.moveItem=(si,i,d)=>{const a=D.sections[si].items,j=i+d;if(j<0||j>=a.length)return;[a[i],a[j]]=[a[j],a[i]];dirty=true;draw();};
+window.moveSec=(si,d)=>{const a=D.sections,j=si+d;if(j<0||j>=a.length)return;[a[si],a[j]]=[a[j],a[si]];tab='s'+j;dirty=true;draw();};
+</script></body></html>

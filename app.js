@@ -1,4 +1,4 @@
-const D = window.PORTFOLIO;
+let D = window.PORTFOLIO;
 let lang = localStorage.getItem('lang') || (navigator.language.startsWith('es') ? 'es' : 'en');
 const t = v => v && typeof v === 'object' && !Array.isArray(v) ? (v[lang] ?? v.en) : v;
 const UI = {
@@ -47,8 +47,8 @@ const pages = {
 };
 
 function sectionPage(s) {
-  if (s.comingSoon && !s.items.length) return `<section class="page"><h2>${esc(t(s.title))}</h2><div class="card soon"><div>🎨</div><p>${u('soon')}</p></div></section>`;
-  return `<section class="page"><h2>${esc(t(s.title))}</h2><div class="projects">${s.items.map(p=>`
+  if (!s.items.filter(p=>!p.hidden).length) return `<section class="page"><h2>${esc(t(s.title))}</h2><div class="card soon"><div>🎨</div><p>${u('soon')}</p></div></section>`;
+  return `<section class="page"><h2>${esc(t(s.title))}</h2><div class="projects">${s.items.filter(p=>!p.hidden).map(p=>`
     <article class="proj reveal" onclick="location.hash='${s.id}/${p.id}'"><div class="cover-wrap"><div class="cover" style="background-image:url('${p.images[0]||''}')"></div></div>
     <div class="body"><h3>${esc(t(p.title))}</h3><p>${esc(t(p.problem))}</p><p class="result">✨ ${esc(t(p.result))}</p>
     <div class="chips">${p.tags.map(x=>`<span class="chip">${esc(x)}</span>`).join('')}</div></div></article>`).join('')}</div></section>`;
@@ -61,6 +61,7 @@ function projectPage(s, p) {
   return `<section class="page detail"><button class="back" onclick="location.hash='${s.id}'">${u('back')}</button>
     <h1>${esc(t(p.title))}</h1><div class="chips">${p.tags.map(x=>`<span class="chip">${esc(x)}</span>`).join('')}</div>
     <div class="psr"><div><b>${u('problem')}</b><p>${esc(t(p.problem))}</p></div><div><b>${u('solution')}</b><p>${esc(t(p.solution))}</p></div><div><b>${u('result')}</b><p>${esc(t(p.result))}</p></div></div>
+    ${p.note?`<div class="card" style="background:var(--frozen);border-left:6px solid var(--pacific);padding:16px 20px;margin:0 0 16px;font-weight:500">${esc(t(p.note))}</div>`:''}
     <div class="btns" style="margin:0 0 24px">${L.demo?`<a class="btn" target="_blank" rel="noopener" href="${L.demo}">🚀 ${u('demo')}</a>`:''}${L.repo?`<a class="btn alt" target="_blank" rel="noopener" href="${L.repo}">💻 ${u('repo')}</a>`:''}</div>
     <div class="gallery">${gal.map((g,i)=>`<figure class="reveal" onclick="openLb(${i})"><img loading="lazy" src="${g.src}" alt="${esc(g.cap)}"><figcaption>${esc(g.cap)}</figcaption></figure>`).join('')}</div></section>`;
 }
@@ -91,4 +92,14 @@ function reveal() { document.querySelectorAll('.reveal').forEach((el, i) => { el
   for (let i = 0; i < 14; i++) { const s = document.createElement('span'), z = 20 + Math.random() * 70;
     Object.assign(s.style, { width: z + 'px', height: z + 'px', left: Math.random() * 100 + '%', animationDuration: 14 + Math.random() * 18 + 's', animationDelay: -Math.random() * 30 + 's' }); b.appendChild(s); }
   document.body.appendChild(b); })();
-route();
+
+(async () => {
+  const c = window.FIREBASE_CONFIG || {};
+  if (c.projectId) {
+    try {
+      const r = await fetch(`https://firestore.googleapis.com/v1/projects/${c.projectId}/databases/(default)/documents/site/content?key=${c.apiKey}`);
+      if (r.ok) { const doc = await r.json(); const s = doc.fields?.json?.stringValue; if (s) D = JSON.parse(s); }
+    } catch (e) { console.warn('Using local data', e); }
+  }
+  route();
+})();
