@@ -71,3 +71,5 @@ h1{font-size:clamp(34px,5vw,56px);line-height:1.1;margin:.2em 0;color:var(--yale
 #tabs a.on{animation:pop .4s both}
 .lightbox img{animation:pop .35s both}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.reveal{opacity:1;transform:none}}
+
+.gallery img[src*="design/"]{object-fit:contain;background:#eef6fb;aspect-ratio:4/5}
