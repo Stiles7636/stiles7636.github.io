@@ -8,7 +8,7 @@ window.PORTFOLIO = {
     location: "San José, Costa Rica",
     email: "fabricioumana453@gmail.com",
     linkedin: "https://www.linkedin.com/",
-    github: ""
+    github: "https://github.com/Stiles7636"
   },
   about: {
     en: "Web Development technician with experience at Amazon Prime Video, focused on building internal tools that automate processes and save time. Proactive, punctual and responsible, with strong leadership and teamwork skills.",
@@ -46,14 +46,15 @@ window.PORTFOLIO = {
         result: { en: "15 min → 10 seconds. Used by 15 people.", es: "15 min → 10 segundos. Usada por 15 personas." },
         images: ["img/harvester/01-pagina.jpg","img/harvester/02-popup.jpg","img/harvester/03-seleccion.jpg","img/harvester/04-descargas.jpg"],
         captions: { en: ["Any page with images","Detected images with size","Select & filter","Saved in one folder"], es: ["Cualquier página con imágenes","Imágenes detectadas con su tamaño","Seleccionar y filtrar","Guardadas en una carpeta"] },
-        links: { repo: "", demo: "" } },
+        links: { repo: "https://github.com/Stiles7636/image-harvester", demo: "" } },
       { id: "autofill", title: "Address Autofill", tags: ["JavaScript","Chrome Extension","UX"],
         problem: { en: "Filling test address forms by hand took ~2 min each and caused errors.", es: "Llenar a mano formularios de direcciones de prueba tomaba ~2 min y causaba errores." },
         solution: { en: "One-click autofill with realistic test data for 243 countries: flags, search, 5 rotating addresses per country, keyboard shortcut and dark mode.", es: "Autollenado en un clic con datos de prueba realistas para 243 países: banderas, buscador, 5 direcciones que rotan por país, atajo de teclado y modo oscuro." },
         result: { en: "Saves 2 min per form and reduces errors. Used by 15 people.", es: "Ahorra 2 min por formulario y reduce errores. Usada por 15 personas." },
-        images: ["img/autofill/01-formulario-vacio.jpg","img/autofill/02-popup.jpg","img/autofill/03-formulario-lleno.jpg"],
-        captions: { en: ["Empty form","Pick a country","Filled in one click"], es: ["Formulario vacío","Elegir un país","Lleno en un clic"] },
-        links: { repo: "", demo: "" } },
+        images: ["img/autofill/01-empty.jpg","img/autofill/02-popup.jpg","img/autofill/03-filled.jpg","img/autofill/04-saved.jpg"],
+        captions: { en: ["Empty checkout form","Pick a country and address","8 fields filled in one click","Address saved"], es: ["Formulario de checkout vacío","Elegir país y dirección","8 campos llenos en un clic","Dirección guardada"] },
+        note: { en: "🧪 Install the extension from GitHub, then try it on the test form (Live demo).", es: "🧪 Instala la extensión desde GitHub y pruébala en el formulario de prueba (Ver en vivo)." },
+        links: { repo: "https://github.com/Stiles7636/address-autofill", demo: "demos/address-form/index.html" } },
       { id: "lrpm", title: { en: "Intern Attendance Tracker", es: "Control de Asistencia" }, tags: ["HTML","JavaScript","Firebase","Netlify"],
         problem: { en: "The team had no simple way to track check-in and lunch times.", es: "El equipo no tenía una forma simple de registrar entradas y almuerzos." },
         solution: { en: "A web app where interns clock in, track lunch and see their history, with a Firebase backend.", es: "Una app web donde los practicantes marcan entrada, registran el almuerzo y ven su historial, con Firebase." },
