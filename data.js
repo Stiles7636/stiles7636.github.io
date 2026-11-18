@@ -7,7 +7,7 @@ window.PORTFOLIO = {
                es: "Desarrollador Web Junior y Diseñador Visual — detallista, rápido y siempre buscando una mejor forma de hacer las cosas." },
     location: "San José, Costa Rica",
     email: "fabricioumana453@gmail.com",
-    linkedin: "https://www.linkedin.com/",
+    linkedin: "https://cr.linkedin.com/in/fabricio-uma%C3%B1a-571763408",
     github: "https://github.com/Stiles7636"
   },
   about: {
